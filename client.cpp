@@ -204,22 +204,24 @@ int main(int argc, char *argv[]){
                 fm->offset += fm->length;
                 //cout << fm->offset << endl;
             }
+            rem_channel = rem / num_channels;
             if (i > 0) {
                 MESSAGE_TYPE q = QUIT_MSG;
                 new_channels[i]->cwrite(&q, sizeof(MESSAGE_TYPE));
             }
         }
-
+        
         if (rem_file > 0) {
             while (rem_file > 0) {
                 fm->length = (int) min (rem_file, (__int64_t) MAX_MESSAGE);
                 new_channels[0]->cwrite (buf, to_alloc);
                 new_channels[0]->cread (recv_buffer, MAX_MESSAGE);
                 fwrite (recv_buffer, 1, fm->length, outfile);
-                rem_channel -= fm->length;
+                rem_file -= fm->length;
                 fm->offset += fm->length;
             }
         }
+        
         MESSAGE_TYPE q = QUIT_MSG;
         new_channels[0]->cwrite(&q, sizeof(MESSAGE_TYPE));
         fclose (outfile);

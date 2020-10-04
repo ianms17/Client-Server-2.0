@@ -4,7 +4,7 @@ using namespace std;
 
 
 /*--------------------------------------------------------------------------*/
-/* CONSTRUCTOR/DESTRUCTOR FOR CLASS   R e q u e s t C h a n n e l  */
+/* CONSTRUCTOR/DESTRUCTOR FOR CLASS   S H M R e q u e s t C h a n n e l  */
 /*--------------------------------------------------------------------------*/
 
 SHMRequestChannel::SHMRequestChannel(const string _name, const Side _side, int _len) : RequestChannel(_name, _side) {

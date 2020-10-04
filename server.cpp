@@ -42,7 +42,7 @@ void process_newchannel_request (RequestChannel *_channel){
 	if (ipcmethod == "f") {
 		data_channel = new FIFORequestChannel (new_channel_name, RequestChannel::SERVER_SIDE);
 	} else if (ipcmethod == "q") {
-		data_channel = new MQRequestChannel (new_channel_name, RequestChannel::SERVER_SIDE);
+		data_channel = new MQRequestChannel (new_channel_name, RequestChannel::SERVER_SIDE, buffercapacity);
 	} else if (ipcmethod == "m") {
 		data_channel = new SHMRequestChannel (new_channel_name, RequestChannel::SERVER_SIDE, buffercapacity);
 	}
@@ -201,7 +201,7 @@ int main(int argc, char *argv[]){
 	if (ipcmethod == "f") {
 		control_channel = new FIFORequestChannel ("control", RequestChannel::SERVER_SIDE);
 	} else if (ipcmethod == "q") {
-		control_channel = new MQRequestChannel ("control", RequestChannel::SERVER_SIDE);
+		control_channel = new MQRequestChannel ("control", RequestChannel::SERVER_SIDE, buffercapacity);
 	} else if (ipcmethod == "m") {
 		control_channel = new SHMRequestChannel ("control", RequestChannel::SERVER_SIDE, buffercapacity);
 	}

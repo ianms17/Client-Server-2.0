@@ -10,7 +10,7 @@ protected:
 
 
 public:
-	MQRequestChannel(const string _name, const Side _side);
+	MQRequestChannel(const string _name, const Side _side, int buffercapacity);
 	/* Creates a "local copy" of the channel specified by the given name. 
 	 If the channel does not exist, the associated IPC mechanisms are 
 	 created. If the channel exists already, this object is associated with the channel.
@@ -44,7 +44,7 @@ public:
 	bytes written and that can be less than msglen (even 0) probably due to buffer limitation (e.g., the recepient
 	cannot accept msglen bytes due to its own buffer capacity. */
 
-	int open_ipc (string name, int mode);
+	int open_ipc (string name, int mode, int buffercapacity);
 
 };
 

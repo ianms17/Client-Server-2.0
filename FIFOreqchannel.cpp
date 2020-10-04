@@ -3,7 +3,7 @@
 using namespace std;
 
 /*--------------------------------------------------------------------------*/
-/* CONSTRUCTOR/DESTRUCTOR FOR CLASS   R e q u e s t C h a n n e l  */
+/* CONSTRUCTOR/DESTRUCTOR FOR CLASS   F I F O R e q u e s t C h a n n e l  */
 /*--------------------------------------------------------------------------*/
 
 FIFORequestChannel::FIFORequestChannel(const string _name, const Side _side) : RequestChannel(_name, _side) {

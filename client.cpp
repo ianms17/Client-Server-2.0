@@ -72,7 +72,7 @@ int main(int argc, char *argv[]){
     if (ipcmethod == "f") {
         control_chan = new FIFORequestChannel ("control", RequestChannel::CLIENT_SIDE);
     } else if (ipcmethod == "q") {
-        control_chan = new MQRequestChannel ("control", RequestChannel::CLIENT_SIDE);
+        control_chan = new MQRequestChannel ("control", RequestChannel::CLIENT_SIDE, buffercap);
     } else if (ipcmethod == "m") {
         control_chan = new SHMRequestChannel ("control", RequestChannel::CLIENT_SIDE, buffercap);
     }
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]){
             if (ipcmethod == "f") {
                 chan = new FIFORequestChannel (newchanname, RequestChannel::CLIENT_SIDE);
             } else if (ipcmethod == "q") {
-                chan = new MQRequestChannel (newchanname, RequestChannel::CLIENT_SIDE);
+                chan = new MQRequestChannel (newchanname, RequestChannel::CLIENT_SIDE, buffercap);
             } else if (ipcmethod == "m") {
                 chan = new SHMRequestChannel (newchanname, RequestChannel::CLIENT_SIDE, buffercap);
             }
@@ -162,6 +162,8 @@ int main(int argc, char *argv[]){
                 }
                 ofs << "-------- END OF CHANNEL REQUEST --------" << endl;
             }
+            MESSAGE_TYPE q = QUIT_MSG;
+            new_channels[i]->cwrite(&q, sizeof(MESSAGE_TYPE));
         }
         if (t < 0) {
             gettimeofday(&end, NULL);
@@ -190,15 +192,36 @@ int main(int argc, char *argv[]){
         fm->offset = 0;
 
         char* recv_buffer = new char [MAX_MESSAGE];
-        while (rem>0){
-            fm->length = (int) min (rem, (__int64_t) MAX_MESSAGE);
-            chan->cwrite (buf, to_alloc);
-            chan->cread (recv_buffer, MAX_MESSAGE);
-            fwrite (recv_buffer, 1, fm->length, outfile);
-            rem -= fm->length;
-            fm->offset += fm->length;
-            //cout << fm->offset << endl;
+        __int64_t rem_channel = rem / num_channels;
+        __int64_t rem_file = rem % num_channels;
+        for (int i = 0; i < num_channels; ++i) {
+            while (rem_channel > 0) {
+                fm->length = (int) min (rem_channel, (__int64_t) MAX_MESSAGE);
+                new_channels[i]->cwrite (buf, to_alloc);
+                new_channels[i]->cread (recv_buffer, MAX_MESSAGE);
+                fwrite (recv_buffer, 1, fm->length, outfile);
+                rem_channel -= fm->length;
+                fm->offset += fm->length;
+                //cout << fm->offset << endl;
+            }
+            if (i > 0) {
+                MESSAGE_TYPE q = QUIT_MSG;
+                new_channels[i]->cwrite(&q, sizeof(MESSAGE_TYPE));
+            }
         }
+
+        if (rem_file > 0) {
+            while (rem_file > 0) {
+                fm->length = (int) min (rem_file, (__int64_t) MAX_MESSAGE);
+                new_channels[0]->cwrite (buf, to_alloc);
+                new_channels[0]->cread (recv_buffer, MAX_MESSAGE);
+                fwrite (recv_buffer, 1, fm->length, outfile);
+                rem_channel -= fm->length;
+                fm->offset += fm->length;
+            }
+        }
+        MESSAGE_TYPE q = QUIT_MSG;
+        new_channels[0]->cwrite(&q, sizeof(MESSAGE_TYPE));
         fclose (outfile);
         delete recv_buffer;
         delete buf;
@@ -207,9 +230,10 @@ int main(int argc, char *argv[]){
 
     // send close message to for every created channel
     MESSAGE_TYPE q = QUIT_MSG;
-    for (int i = 0; i < num_channels; ++i) {
+    /*for (int i = 0; i < num_channels; ++i) {
         new_channels[i]->cwrite (&q, sizeof (MESSAGE_TYPE));
-    }
+        // delete new_channels[i];
+    }*/
 
     if (new_channels[0] != control_chan) { // this means that the user requested a new channel, so the control_channel must be destroyed as well 
         control_chan->cwrite (&q, sizeof (MESSAGE_TYPE));
